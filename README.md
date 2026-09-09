@@ -17,14 +17,14 @@ java -version
 javac -version
 ```
 
-## 2. Copy this folder onto your phone
+## 2. Copy this folder onto your phone using git clone
 
 
 ```bash
 git clone https://github.com/Hrushikesh07-ind/ROICalculator
 ```
 
-(Adjust the source path to wherever you saved/downloaded the folder.)
+
 
 ## 3. Compile and run
 
