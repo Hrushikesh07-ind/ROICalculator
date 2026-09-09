@@ -7,7 +7,7 @@ ROI Calculator - Input the Premium price, Indices Name, Strike price and the Lot
 
 ```bash
 pkg update
-pkg install openjdk-21
+pkg install openjdk-21 git
 ```
 
 Check it worked:
