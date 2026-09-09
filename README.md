@@ -29,7 +29,7 @@ git clone https://github.com/Hrushikesh07-ind/ROICalculator
 ## 3. Compile and run
 
 ```bash
-cd ROICalculator
+cd ROICalculator/ROICalculator
 javac Server.java
 java Server 8080
 ```
