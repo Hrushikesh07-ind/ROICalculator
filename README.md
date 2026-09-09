@@ -19,12 +19,9 @@ javac -version
 
 ## 2. Copy this folder onto your phone
 
-Move the whole `calcapp` folder into Termux's storage, e.g. via:
 
 ```bash
-termux-setup-storage
-cp -r /sdcard/Download/calcapp ~/calcapp
-cd ~/calcapp
+git clone https://github.com/Hrushikesh07-ind/ROICalculator
 ```
 
 (Adjust the source path to wherever you saved/downloaded the folder.)
@@ -32,7 +29,7 @@ cd ~/calcapp
 ## 3. Compile and run
 
 ```bash
-cd ~/calcapp
+cd ROICalculator
 javac Server.java
 java Server 8080
 ```
