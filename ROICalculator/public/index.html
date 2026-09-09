@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Position Calculator</title>
+<style>
+  :root {
+    --bg: #0B0E11;
+    --surface: #12161B;
+    --surface-raised: #171C22;
+    --border: #232932;
+    --text: #E7EAEE;
+    --text-dim: #7C8896;
+    --text-faint: #4A5361;
+    --profit: #3FBF8F;
+    --loss: #E5584D;
+    --accent: #E8A33D;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .num {
+    font-family: "SF Mono", "Roboto Mono", ui-monospace, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; min-height: 100vh; padding: 28px 20px 40px; }
+  header { margin-bottom: 24px; }
+  .eyebrow { color: var(--text-faint); font-size: 12px; margin: 0 0 4px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; background: var(--text-faint); }
+  .status-dot.up { background: var(--profit); }
+  .status-dot.down { background: var(--loss); }
+  .conn-status { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+  .index-select { display: flex; gap: 8px; margin-bottom: 22px; }
+  .idx-btn {
+    flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--text-dim);
+    padding: 12px 6px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .idx-btn .lot-hint { font-size: 10.5px; font-weight: 400; color: var(--text-faint); }
+  .idx-btn.active { border-color: var(--accent); color: var(--text); background: var(--surface-raised); }
+  .idx-btn.active .lot-hint { color: var(--accent); }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; }
+  .field input {
+    width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text);
+    font-size: 17px; padding: 13px 14px; border-radius: 8px; outline: none; transition: border-color 0.15s ease;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .field input::placeholder { color: var(--text-faint); }
+  .calc-btn {
+    width: 100%; background: var(--accent); color: #14110A; border: none; padding: 15px;
+    border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer;
+    margin-top: 6px; margin-bottom: 24px; transition: filter 0.15s ease;
+  }
+  .calc-btn:active { filter: brightness(0.9); }
+  .calc-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .results { border-top: 1px solid var(--border); padding-top: 20px; display: none; }
+  .results.show { display: block; }
+  .result-row { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .result-row:last-child { border-bottom: none; }
+  .result-label { font-size: 13px; color: var(--text-dim); }
+  .result-value { font-size: 19px; font-weight: 600; }
+  .result-value.profit { color: var(--profit); }
+  .result-value.loss { color: var(--loss); }
+  .error { color: var(--loss); font-size: 13px; margin-top: -6px; margin-bottom: 16px; display: none; }
+  .error.show { display: block; }
+  footer { margin-top: 28px; font-size: 11.5px; color: var(--text-faint); line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">F&amp;O position sizing</p>
+      <h1>Investment &amp; ROI Calculator</h1>
+      <p class="conn-status"><span class="status-dot" id="statusDot"></span><span id="statusText">Checking backend…</span></p>
+    </header>
+
+    <div class="index-select" id="indexSelect">
+      <button class="idx-btn active" data-index="nifty" data-mult="65">NIFTY</button>
+      <button class="idx-btn" data-index="banknifty" data-mult="30">BANKNIFTY</button>
+      <button class="idx-btn" data-index="sensex" data-mult="20">SENSEX</button>
+    </div>
+
+    <div class="field">
+      <label for="price">Premium price</label>
+      <input class="num" type="number" inputmode="decimal" id="price" placeholder="e.g. 75.65">
+    </div>
+
+    <div class="field">
+      <label for="lotSize">Lot size (number of lots)</label>
+      <input class="num" type="number" inputmode="numeric" id="lotSize" placeholder="e.g. 3">
+    </div>
+
+    <div class="field">
+      <label for="strike">Strike price Of the Premium</label>
+      <input class="num" type="number" inputmode="decimal" id="strike" placeholder="e.g. 105.55">
+    </div>
+
+    <p class="error" id="errorMsg"></p>
+
+    <button class="calc-btn" id="calcBtn">Calculate</button>
+
+    <div class="results" id="results">
+      <div class="result-row"><span class="result-label">Quantity</span><span class="result-value num" id="qtyOut">—</span></div>
+      <div class="result-row"><span class="result-label">Investment amount</span><span class="result-value num" id="amountOut">—</span></div>
+      <div class="result-row"><span class="result-label">ROI</span><span class="result-value num" id="roiOut">—</span></div>
+    </div>
+
+    <footer>
+      Calculation runs on the Java backend (Server.java) at /api/calculate — this page only sends your inputs and displays the response.
+    </footer>
+  </div>
+
+<script>
+  const state = { index: 'nifty', mult: 65 };
+  const buttons = document.querySelectorAll('.idx-btn');
+  const results = document.getElementById('results');
+  const errorMsg = document.getElementById('errorMsg');
+  const statusDot = document.getElementById('statusDot');
+  const statusText = document.getElementById('statusText');
+  const calcBtn = document.getElementById('calcBtn');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.index = btn.dataset.index;
+      state.mult = parseInt(btn.dataset.mult, 10);
+      results.classList.remove('show');
+    });
+  });
+
+  function fmt(n) {
+    return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  async function checkBackend() {
+    try {
+      const res = await fetch('/api/calculate?indices=nifty&price=1&lotSize=1&strikePrice=1');
+      if (res.ok) {
+        statusDot.classList.add('up');
+        statusText.textContent = 'Connected to backend';
+      } else {
+        throw new Error();
+      }
+    } catch {
+      statusDot.classList.add('down');
+      statusText.textContent = 'Backend not reachable — is Server.java running?';
+    }
+  }
+  checkBackend();
+
+  calcBtn.addEventListener('click', async () => {
+    const price = document.getElementById('price').value;
+    const lotSize = document.getElementById('lotSize').value;
+    const strike = document.getElementById('strike').value;
+
+    if (price === '' || lotSize === '' || strike === '') {
+      errorMsg.textContent = 'Enter a price, lot size, and strike price.';
+      errorMsg.classList.add('show');
+      results.classList.remove('show');
+      return;
+    }
+
+    calcBtn.disabled = true;
+    calcBtn.textContent = 'Calculating…';
+
+    try {
+      const params = new URLSearchParams({ indices: state.index, price, lotSize, strikePrice: strike });
+      const res = await fetch('/api/calculate?' + params.toString());
+      const data = await res.json();
+
+      if (!res.ok) {
+        errorMsg.textContent = data.error || 'Something went wrong.';
+        errorMsg.classList.add('show');
+        results.classList.remove('show');
+        return;
+      }
+
+      errorMsg.classList.remove('show');
+      document.getElementById('qtyOut').textContent = data.quantity.toLocaleString('en-IN');
+      document.getElementById('amountOut').textContent = '₹' + fmt(data.investmentAmount);
+
+      const roiEl = document.getElementById('roiOut');
+      const roi = data.roi;
+      roiEl.textContent = (roi >= 0 ? '+₹' : '−₹') + fmt(Math.abs(roi));
+      roiEl.classList.remove('profit', 'loss');
+      roiEl.classList.add(roi >= 0 ? 'profit' : 'loss');
+
+      results.classList.add('show');
+    } catch (e) {
+      errorMsg.textContent = 'Could not reach the backend server.';
+      errorMsg.classList.add('show');
+    } finally {
+      calcBtn.disabled = false;
+      calcBtn.textContent = 'Calculate';
+    }
+  });
+</script>
+</body>
+</html>
