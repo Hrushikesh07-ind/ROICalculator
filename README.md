@@ -1,6 +1,6 @@
 # ROICalculator(Option Premium Calculator)
 
-ROI Calculator - Input the Premium price, Indices Name, Strike price and the Lot Size - It will provide you the exact investment with returns excluding platform taxes.
+Return On Investment Calculator - Input the Premium price, Indices Name, Strike price and the Lot Size - It will provide you the exact investment with returns excluding platform taxes.
 
 
 ## 1. Install Java in Termux
